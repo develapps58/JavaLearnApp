@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:padding="5pt"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:text="Текст вопроса"
+        android:gravity="center"
+        android:textSize="10pt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/question_title_all" />
+
+    <ListView
+        android:id="@+id/answers_list"
+        android:layout_marginTop="5pt"
+        android:layout_marginBottom="5pt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/linearLayout"
+        android:layout_below="@+id/question_title_all"></ListView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20pt"
+        android:id="@+id/linearLayout"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true">
+
+        <Button
+            android:id="@+id/end_test"
+            android:background="@android:color/holo_green_light"
+            android:layout_weight="1"
+            android:text="Завершить тест"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <ImageButton
+            android:id="@+id/answer_prev"
+            android:layout_weight="3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/holo_blue_dark"
+            app:srcCompat="@android:drawable/ic_media_previous" />
+        <ImageButton
+            android:id="@+id/answer_next"
+            android:layout_weight="3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/holo_blue_dark"
+            app:srcCompat="@android:drawable/ic_media_next" />
+    </LinearLayout>
+</RelativeLayout>

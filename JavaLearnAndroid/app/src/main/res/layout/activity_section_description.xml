@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start"
+    android:layout_height="match_parent">
+
+    <WebView
+        android:id="@+id/section_description"
+        android:textSize="8pt"
+        android:layout_gravity="center_vertical|right"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5pt"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true" />
+</RelativeLayout>

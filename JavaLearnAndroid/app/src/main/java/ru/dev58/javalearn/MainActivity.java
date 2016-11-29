@@ -1,10 +1,12 @@
 package ru.dev58.javalearn;
 
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
+import android.support.design.internal.NavigationMenu;
+import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,17 +14,30 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.net.InetAddress;
 
 import adapters.SectionGridAdapter;
+import controllers.ChangesController;
+import controllers.ChaptersController;
+import controllers.QuestionsController;
 import controllers.SectionsController;
-import models.Chapters;
-import models.Sections;
+import controllers.UserAnswersController;
+import core.CurrentUser;
+import core.Settings;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    static MainActivity self = null;
+    static GridView sectionsView = null;
+    NavigationView navigationView = null;
+    static Menu menu = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,14 +46,11 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
+        self = this;
+        Settings.context = this;
+
+        navigationView = (NavigationView)findViewById(R.id.nav_view);
+        menu = navigationView.getMenu();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -46,18 +58,11 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        sectionsView = (GridView)findViewById(R.id.section_gv);
 
-        generateTestModels();
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            ((GridView)findViewById(R.id.section_gv)).setNumColumns(3);
-        }
-        else {
-            ((GridView)findViewById(R.id.section_gv)).setNumColumns(2);
-        }
-        ((GridView)findViewById(R.id.section_gv))
-                .setAdapter(new SectionGridAdapter(this, SectionsController.instance().get_collection()));
+        new LoadInterface().execute();
+
     }
 
     @Override
@@ -98,18 +103,17 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.nav_login) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            this.startActivity(intent);
+        } else if (id == R.id.nav_registration) {
+            Intent intent = new Intent(this, RegistrationActivity.class);
+            this.startActivity(intent);
+        } else if (id == R.id.nav_logout) {
+            CurrentUser.logout();
+            invalidateSections();
+            loginMenuVisible();
+            setUserInfo();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -117,38 +121,102 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void generateTestModels () {
-
-        Sections section = new Sections();
-        section.setId(1);
-        section.setTitle("Изучаем Java. Первые шаги.");
-        section.setDescription("В данном разделе Вы познакомитесь с историей языка Java");
-
-        Sections section1 = new Sections();
-        section1.setId(2);
-        section1.setTitle("Изучаем Java. Знакомимся с типами.");
-        section1.setDescription("В данном разделе Вы познакомитесь с типами, используемыми в языке Java...");
-
-        Sections section2 = new Sections();
-        section2.setId(3);
-        section2.setTitle("Изучаем Java. Знакомимся с функциями.");
-        section2.setDescription("В данном разделе Вы познакомитесь с базовыми конструкциями языка...");
-
-        Chapters chapter = new Chapters();
-        chapter.setId(1);
-        chapter.setTitle("Введение");
-        chapter.setContent("<b>No content</b>");
-        chapter.setId_section(1);
-
-        try {
-            section.save();
-            section1.save();
-            section2.save();
-            chapter.save();
+    private void loadModels () {
+        if(ChangesController.instance().isError()) {
+            Toast.makeText(this, ChangesController.instance().getError(), Toast.LENGTH_LONG).show();
         }
-        catch (ClassCastException exception) {
-            Log.e("Error", exception.getMessage());
+        if(SectionsController.instance().isError()) {
+            Toast.makeText(this, SectionsController.instance().getError(), Toast.LENGTH_LONG).show();
+        }
+        if(ChaptersController.instance().isError()) {
+            Toast.makeText(this, ChaptersController.instance().getError(), Toast.LENGTH_LONG).show();
         }
     }
 
+    public static void loginMenuVisible () {
+        menu.findItem(R.id.nav_login).setVisible(true);
+        menu.findItem(R.id.nav_registration).setVisible(true);
+        menu.findItem(R.id.nav_logout).setVisible(false);
+    }
+
+    public static void logoutMenuVisible () {
+        menu.findItem(R.id.nav_login).setVisible(false);
+        menu.findItem(R.id.nav_registration).setVisible(false);
+        menu.findItem(R.id.nav_logout).setVisible(true);
+    }
+
+    public static void setUserInfo () {
+        NavigationView navigationView = (NavigationView)self.findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        TextView title = (TextView) headerView.findViewById(R.id.textView);
+        if(CurrentUser.getCurrentUser() != null) {
+            title.setText("Добро пожаловать, " + CurrentUser.getCurrentUser().getFullname());
+        }
+        else {
+           title.setText("Добро пожаловать, " + CurrentUser.getDefaultLogin());
+        }
+        if(!Settings.isOnline) {
+            title.setText(title.getText() + " (offline)");
+        }
+    }
+
+    public static void invalidateSections () {
+        sectionsView.invalidateViews();
+    }
+
+    public class  LoadInterface extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if(Settings.isLoaded) {
+                        publishProgress("", "");
+                        return;
+                    }
+                    publishProgress("Загружаю данные пользователя...");
+                    if(CurrentUser.loadLocalSettings()) {
+                        Settings.isOnline = true;
+                        publishProgress("Загружаю сохраненные тесты...");
+                        UserAnswersController.instance();
+                        publishProgress("Загружаю вопросы...");
+                        QuestionsController.instance();
+                        publishProgress("Загружаю обновления...", "f_end");
+                    }
+                    else {
+                        publishProgress("Загружаю обновления...", "n_end");
+                    }
+                    Settings.isLoaded = true;
+                }
+            }).start();
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            if(values.length == 2) {
+                if (values[1].equals("f_end")) {
+                    logoutMenuVisible();
+                    setUserInfo();
+                    ((TextView) findViewById(R.id.loading_info)).setVisibility(View.INVISIBLE);
+                }
+                if (values[1].equals("n_end")) {
+                    loginMenuVisible();
+                    ((TextView) findViewById(R.id.loading_info)).setVisibility(View.INVISIBLE);
+                }
+                loadModels();
+
+                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    sectionsView.setNumColumns(3);
+                }
+                else {
+                    sectionsView.setNumColumns(2);
+                }
+                sectionsView.setAdapter(new SectionGridAdapter(MainActivity.this, SectionsController.instance().get_collection()));
+                return;
+            }
+            ((TextView)findViewById(R.id.loading_info)).setText(values[0]);
+        }
+    }
 }

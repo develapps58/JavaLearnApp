@@ -57,6 +57,9 @@ var Cell = function (content, parent) {
     var clear = function () { view.innerHTML = ''; };
     
     this.setContent = function (c) { item.setContent(c); };
+    this.getPureContent = function () { 
+        return item.getCurrentView().textContent;
+    };
     this.getView = function () { return view; };
     this.repaint = function () { clear(); view.appendChild(item.getCurrentView());};
 
@@ -75,7 +78,7 @@ var Row = function (id, parent) {
     this.addCell = function (name, cell) { cells[name] = cell; };
     this.cellCount = function () { return cells.length; };
     this.cells = function () { return cells; };
-    this.cell = function (index) { return cells[index]; };
+    this.cell = function (name) { return cells[name]; };
     this.setId = function (id) { itemid = id; };
     this.getId = function () { return itemid; };
     this.repaint = function () {
@@ -91,16 +94,29 @@ var Row = function (id, parent) {
 var Table = function (view) {
     this.view = view;
     this.rules = {};
+    this.header = {};
     this.rows = {};
+    
+    this.sortfield = null;
+    this.sortorder = true;
 };
 
 Table.prototype.clear = function () {
     this.view.innerHTML = '';
 };
 
+Table.prototype.clearWithoutHeader = function () {
+    for(var row in this.rows) {
+        this.view.removeChild(this.rows[row].getView());
+    };
+};
+
 Table.prototype.addItem = function (row, paint) {
     this.rows[row.getId()] = row;
     if(paint) this.paintItem(row.getId());
+    if(!isUndefinedOrNull(this.sortfield)) {
+        this.sort(this.sortfield, (this.sortorder) ? 1 : -1);
+    }
 };
 
 Table.prototype.removeItem = function (item) {
@@ -124,7 +140,12 @@ Table.prototype.paintItem = function (rowId) {
 Table.prototype.repaint = function () {
     this.clear();
     this.drawHeaders();
-    var rows = this.rowsAsArray();
+    if(!isUndefinedOrNull(this.sortfield)) {
+        var rows = this.getSortByField(this.sortfield, (this.sortorder) ? 1 : -1);
+    }
+    else {
+        var rows = this.rowsAsArray();
+    }
     for(var i = 0, n = rows.length; i < n; i++) {
         this.view.appendChild(rows[i].getView());
     }
@@ -138,38 +159,51 @@ Table.prototype.rowsAsArray = function () {
     return rows;
 };
 
-Table.prototype.getSortByField = function (fieldName) {
+Table.prototype.getSortByField = function (field, order) {
     var rows = this.rowsAsArray();
     
-    var order = 0;
-    
     rows.sort(function (a, b) {
-        var p1 = a.cell(0).getValue();
-        var p2 = b.cell(0).getValue();
-        /*if(typeof filter === 'function') {
-            return filter(p1, p2);
-        }*/
-
+        
+        var cell1 = a.cell(field);
+        var cell2 = b.cell(field);
+        
+        //if(!(cell1 instanceof Cell) || !(cell2 instanceof Cell)) return 0;
+        
+        var p1 = cell1.getPureContent();
+        var p2 = cell2.getPureContent();
+        
         if(!isNaN(parseFloat(p1)) && !isNaN(parseFloat(p2))) {
             p1 = parseFloat(p1);
             p2 = parseFloat(p2);
-        }            
+        }
+        else if (!isNaN(parseInt(p1)) && !isNaN(parseInt(p2))) {
+            p1 = parseInt(p1);
+            p2 = parseInt(p2);
+        }
+        else {
+            p1 = p1.toLowerCase();
+            p2 = p2.toLowerCase();
+        }
+        
         if(p1 > p2) {
-            if(order === 0) return 1;
+            if(order === 1) return 1;
             else return -1;
         }
         if(p1 < p2) {
-            if(order === 0) return -1;
-            else return 1;
+            if(order === -1) return 1;
+            else return -1;
         }
         return 0;
     });
-    
     return rows;
 };
 
-Table.prototype.sort = function () {
-    
+Table.prototype.sort = function (field, order) {
+    this.clearWithoutHeader();
+    var rows = this.getSortByField(field, order);
+    for(var i = 0, n = rows.length; i < n; i++) {
+        this.view.appendChild(rows[i].getView());
+    }
 };
 
 Table.prototype.drawHeaders = function () {
@@ -178,7 +212,9 @@ Table.prototype.drawHeaders = function () {
         var title = this.rules[rule].title || "";
         row.addCell(rule, new HeaderCell(title, row, this.rules[rule].sortable));
     };
-    this.addItem(row, true);
+    this.header = row;
+    this.header.repaint();
+    this.view.appendChild(this.header.getView());
 };
 
 Table.prototype.drawItem = function (item) {
@@ -197,6 +233,10 @@ Table.prototype.drawItem = function (item) {
     for(var fieldname in this.rules) {
         if(!(fieldname in item)) continue;
         var cell = new Cell(item[fieldname], this);
+        if(!isUndefinedOrNull(this.rules[fieldname].sort) && isUndefinedOrNull(this.sortfield)) {
+            this.sortfield = fieldname;
+            this.sortorder = this.rules[fieldname].sort;
+        }
         if(!isUndefinedOrNull(this.rules[fieldname].style)) setStyle(cell, this.rules[fieldname].style);
         row.addCell(fieldname, cell);
     };

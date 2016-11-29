@@ -36,4 +36,7 @@ var JLModalWindow = function (title, content) {
         mWindow.show();
         mWindow.append(content);
     };
+    this.close = function () {
+        mWindow.close();
+    }
 };

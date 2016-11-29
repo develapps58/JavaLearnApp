@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.dev58.javalearn">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,6 +23,24 @@
         </activity>
         <activity
             android:name=".ChaptersActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".ChapterContentActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".SectionDescriptionActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".LoginActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".RegistrationActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".QuestionsActivity"
+            android:label="JavaLearn"/>
+        <activity
+            android:name=".AnswersActivity"
             android:label="JavaLearn"/>
     </application>
 

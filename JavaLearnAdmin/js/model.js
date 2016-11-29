@@ -21,19 +21,19 @@ Model.prototype = {
         if(!(this.keyName() in this) || isUndefined(this[this.keyName()])) return null;
         return this[this.keyName()];
     },
-    create: function () {
-        (this.parent.remote) ? this.createRemote() : this.parent.save(this);
+    create: function (success, error) {
+        (this.parent.remote) ? this.createRemote(success, error) : this.parent.save(this);
     },
-    update: function () {
-        (this.parent.remote) ? this.updateRemote() : this.parent.save(this);
+    update: function (success, error) {
+        (this.parent.remote) ? this.updateRemote(success, error) : this.parent.save(this);
     },
     //Ф-я выполнения удаленного запроса создания
-    createRemote: function () {
+    createRemote: function (success, error) {
         var self = this;
         var request = prepareRequest(
-                function (response) { self.parent.saveAction(response, self); },
-                function (response) { self.parent.errorAction(response); });
-        var user = new Users();
+                function (response) { self.parent.saveAction(response, self, success); },
+                function (response) { self.parent.errorAction(response, error); });
+        var user = new User();
         if(user.GetAuthInfo()) {
             request.addHeader(["Authorization",  user.GetAuthInfo()]);
         }
@@ -41,12 +41,12 @@ Model.prototype = {
     },
     
     //Ф-я выполнения удаленного запроса редактирования
-    updateRemote: function () {
+    updateRemote: function (success, error) {
         var self = this;
         var request = prepareRequest(
-                function (response) { self.parent.saveAction(response, self); },
-                function (response) { self.parent.errorAction(response); });
-        var user = new Users();
+                function (response) { self.parent.saveAction(response, self, success); },
+                function (response) { self.parent.errorAction(response, error); });
+        var user = new User();
         if(user.GetAuthInfo()) {
             request.addHeader(["Authorization",  user.GetAuthInfo()]);
         }
@@ -55,12 +55,12 @@ Model.prototype = {
     },
     
     //Ф-я выполнения удаленного запроса удаления
-    removeRemote: function () {
+    removeRemote: function (success, error) {
         var self = this;
         var request = prepareRequest(
-                function (response, code) { self.parent.removeAction(response, code, self); },
-                function (response) { self.parent.errorAction(response); });
-        var user = new Users();
+                function (response, code) { self.parent.removeAction(response, code, self, success); },
+                function (response) { self.parent.errorAction(response, error); });
+        var user = new User();
         if(user.GetAuthInfo()) {
             request.addHeader(["Authorization",  user.GetAuthInfo()]);
         }
@@ -84,9 +84,9 @@ Model.create = function (name, remote) {
     this.models[name] = modelObject;
     
     //Имя модели
-    var modelName = name;
-    this.getName = function () {
-        return modelName;
+    modelObject.modelName = name;
+    modelObject.getName = function () {
+        return modelObject.modelName;
     } ;
     
     //Хранилище записей модели
@@ -104,7 +104,7 @@ Model.create = function (name, remote) {
     
     //Ф-ии обратного вызова для операций сохранения/удаления/ошибок
     //Ф-я обратного вызова для операций сохранения
-    modelObject.saveAction = function (response, item) {
+    modelObject.saveAction = function (response, item, userfunc) {
         var responseAsJson = JSON.parse(response);
         if(!('_id' in responseAsJson)) {
             modelObject.errorAction(response); return;
@@ -112,16 +112,18 @@ Model.create = function (name, remote) {
         item._id = responseAsJson._id;
         item._etag = responseAsJson._etag;
         item.parent.save(item);
+        if(isFunction(userfunc)) userfunc(item);
     };
     //Ф-я обратного вызова для операций удаления
-    modelObject.removeAction = function (response, code, item) {
+    modelObject.removeAction = function (response, code, item, userfunc) {
         if(code === 204) {
             item.parent.remove(item);
-        };
+            if(isFunction(userfunc)) userfunc(item)
+        }
     };
     //Ф-я обратного вызова для ошибки
-    modelObject.errorAction = function (response) {
-        console.log(response);
+    modelObject.errorAction = function (response, userfunc) {
+        if(isFunction(userfunc)) userfunc(response);
     };
     
     //Наблюдатели событий
@@ -132,12 +134,12 @@ Model.create = function (name, remote) {
     modelObject.observer.addListener('remove');
     
     var isModelItem = function (item) {
-        if(!('parent' in item) || item.parent.getName() !== modelName) return false;
+        if(!('parent' in item) || item.parent.getName() !== modelObject.modelName) return false; //
         return true;
     };
 
     //Ф-я удаленной загрузки
-    modelObject.loadRemote = function (p) {
+    modelObject.loadRemote = function (p, success, error) {
         var self = this;
         var params = "";
         var request = prepareRequest(function (response) {             
@@ -149,18 +151,19 @@ Model.create = function (name, remote) {
             }
             self.IsLoad = true;
             self.observer.initEvent('onload', [self.model]);
-        });
+            if(isFunction(success)) success(responseAsJson);
+        }, function (response) { if(isFunction(response)) error(response) });
         if(!isUndefinedOrNull(p)) {
             params = '?where=';
             for(var paramskey in p) {
                 params += '{"' + paramskey + '":"' + p[paramskey] + '"}';
             }
         }
-        var user = new Users();
+        var user = new User();
         if(user.GetAuthInfo()) {
             request.addHeader(["Authorization",  user.GetAuthInfo()]);
         }
-        request.exec('GET', HOST + modelName + params, null);
+        request.exec('GET', HOST + modelObject.modelName + params, null); //
     };
     
     //Ф-я добавления 
@@ -201,13 +204,13 @@ Model.removeModel = function (name) {
 //Методы экземпляра модели
 
 //Метод сохранения записи
-Model.prototype.save = function () {
-    (this.key() === null) ? this.create() : this.update();
+Model.prototype.save = function (success, error) {
+    (this.key() === null) ? this.create(success, error) : this.update(success, error);
 };
 
 //Метод удаления записи
-Model.prototype.remove = function () {
-    (this.parent.remote) ? this.removeRemote() : this.parent.remove(this);
+Model.prototype.remove = function (success, error) {
+    (this.parent.remote) ? this.removeRemote(success, error) : this.parent.remove(this);
 };
 
 //Метод замены данных записи из другой записи

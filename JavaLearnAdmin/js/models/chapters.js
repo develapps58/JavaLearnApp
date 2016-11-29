@@ -38,6 +38,17 @@ var LoadChapters = function (container, sectionId) {
                 CKEDITOR.replace(node);
                 return node;
             }
+        },
+        {
+            name: 'roworder',
+            title: 'Порядок',
+            content: function () {
+                var node = document.createElement('input');
+                node.setAttribute('class', 'text');
+                node.setAttribute('type', 'Number');
+                node.setAttribute('id', 'id_order');
+                return node;
+            }
         }
     ];
     
@@ -93,8 +104,13 @@ var LoadChapters = function (container, sectionId) {
                 chapter.title = document.getElementById('id_title').value;
                 chapter.content = CKEDITOR.instances.id_content.getData();
                 chapter.sectionid = sectionId;
+                chapter.roworder = document.getElementById('id_order').value;
                 
-                chapter.save();
+                var loadPanel = new LoadPanel();
+                loadPanel.show();
+                chapter.save(
+                        function () { alert("Сохранение успешно!"); windowSave.close(); loadPanel.hide(); },
+                        function (response) {alert("В ходе сохранения раздела произошли ошибки: " + response + " возможно дубликат номера"); loadPanel.hide();});
             });
             
             var windowSave = new JLModalWindow("Создание главы.", container);
@@ -107,6 +123,7 @@ var LoadChapters = function (container, sectionId) {
             }
         };
     };
+    
     var backEvent = function () {
         var node = document.createElement('div');
         node.setAttribute('class', 'operation_btn back_btn');
@@ -133,8 +150,13 @@ var LoadChapters = function (container, sectionId) {
                     current.title = document.getElementById('id_title').value;
                     current.content = CKEDITOR.instances.id_content.getData();
                     current.sectionid = sectionId;
+                    current.roworder = document.getElementById('id_order').value;
                     
-                    current.save();
+                    var loadPanel = new LoadPanel();
+                    loadPanel.show();
+                    current.save(
+                            function () { alert("Сохранение успешно!"); windowSave.close(); loadPanel.hide(); },
+                            function (response) {alert("В ходе сохранения раздела произошли ошибки: " + response + " возможно дубликат номера"); loadPanel.hide(); });
                 }, current);
                 var windowSave = new JLModalWindow("Редактирование главы '" + item.title + "'", container);
                 windowSave.show();
@@ -146,6 +168,50 @@ var LoadChapters = function (container, sectionId) {
             };
         };
     };
+    
+    var rowOrderBehavior = function () {
+        var currentSortOrder = 0;
+        
+        var node = document.createElement('div');
+        node.setAttribute('class', 'sort-header');
+        
+        var textNode = document.createElement('span');
+        textNode.textContent = '№ главы';
+        
+        var arrowImg = document.createElement('img');
+        arrowImg.width = '20';
+        arrowImg.height = '20';
+        
+        node.appendChild(textNode);
+        node.appendChild(arrowImg);
+        
+        var view = new GetView().view;
+        
+        node.onclick = function () {
+            if(currentSortOrder === 0) {
+                currentSortOrder = 1;
+                arrowImg.src = 'images/up.png';
+                view.sort('roworder', currentSortOrder);
+                return ;
+            } 
+            if(currentSortOrder === 1) {
+                arrowImg.src = 'images/down.png';
+                currentSortOrder = -1;
+            }
+            else {
+                arrowImg.src = 'images/up.png';
+                currentSortOrder = 1;
+            }
+            view.sort('roworder', currentSortOrder);
+        };
+        
+        return {
+            paint: function () {
+                return node;
+            }
+        };
+    };
+    
     var removeChapter = function (item) {
         return function () {
             var node = document.createElement('div');
@@ -199,8 +265,9 @@ var LoadChapters = function (container, sectionId) {
     this.load = function () {
         if(!Chapters.IsLoad) {
             Chapters.remote = true;
-            Chapters.attributes = [ 'title', 'content', 'sectionid' ];
+            Chapters.attributes = [ 'title', 'content', 'sectionid', 'roworder' ];
             var rules = {
+                roworder: {title: function () {return rowOrderBehavior();}, sort: true, style: {width: '110px', textAlign: 'center'}},
                 title: {events: ['add'], title: 'Название главы'},
                 sectionTitle: {events: ['add'], title: 'Раздел', action: function (item) { return sectionTitleBehavior(item); }},
                 __content: {events: ['add', 'onload'], title: 'Контент главы', action: function (item) { return contentBehavior(item); }, style: {width: '200px', textAlign: 'center'}},
@@ -209,12 +276,16 @@ var LoadChapters = function (container, sectionId) {
             };
             var viewModel = new BindingViewModel(view.view, rules);
             viewModel.listenerAdd(Chapters.observer, 'add');
+            viewModel.listenerChange(Chapters.observer, 'change');
             viewModel.listenerRemove(Chapters.observer, 'remove');
-            Chapters.loadRemote({sectionid: sectionId});
+            
+            var loadPanel = new LoadPanel();
+            loadPanel.show();
+            Chapters.loadRemote({sectionid: sectionId}, function () {loadPanel.hide();});
         }
         else {
             view.view.repaint();
         }
-    }    
+    };
 };
 

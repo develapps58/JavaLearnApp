@@ -5,32 +5,37 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start"
     android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/section_title"
-        android:padding="5pt"
-        android:textSize="8pt"
-        android:layout_gravity="center_vertical|right"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
     <ListView
+        android:layout_margin="3pt"
         android:id="@+id/chapters_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/go_test"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/section_title"></ListView>
+        android:layout_above="@+id/go_section_description"
+        android:layout_alignParentTop="true"></ListView>
 
+    <Button
+        android:id="@+id/go_section_description"
+        android:text="Описание раздела"
+        android:background="#008000"
+        android:textColor="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="25pt"
+        android:layout_above="@+id/go_test"
+        android:layout_alignStart="@+id/go_test"
+        android:layout_alignEnd="@+id/go_test" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="25pt"
-        android:layout_margin="5pt"
-        android:background="#008000"
+        android:layout_margin="3pt"
+        android:background="#000080"
         android:textColor="#ffffff"
         android:layout_gravity="bottom"
-        android:text="Выполнить тесты"
+        android:text="Выполнить тесты!"
         android:id="@+id/go_test"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
+
+
 </RelativeLayout>

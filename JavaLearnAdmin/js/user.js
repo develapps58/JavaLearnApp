@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-var Users = function () {
+var User = function () {
     var self = this;
     
     var bearerAuthInfo = '';
@@ -34,12 +34,12 @@ var Users = function () {
     };
     
     this.GetAuthInfo = function () {
-        if(bearerAuthInfo !== '') return bearerAuthInfo;
-        if(basicAuthInfo !== '') return basicAuthInfo;
+        if(bearerAuthInfo !== '') return "Bearer " + bearerAuthInfo;
+        if(basicAuthInfo !== '') return "Basic " + basicAuthInfo;
         return false;
     };
     
-    Users = function () {
+    User = function () {
         return self;
     };
 };

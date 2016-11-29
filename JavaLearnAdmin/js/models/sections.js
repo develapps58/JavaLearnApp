@@ -41,7 +41,7 @@ var LoadSections = function (container) {
             }
         },
         {
-            name: 'order',
+            name: 'roworder',
             title: 'Порядок',
             content: function () {
                 var node = document.createElement('input');
@@ -88,6 +88,9 @@ var LoadSections = function (container) {
                 view.view.clear();
                 var loadChapters = new LoadChapters(document.getElementById('data-table'), item._id);
                 loadChapters.load();
+                
+                var historyOp = new HistoryOperations();
+                historyOp.add(loadChapters.load);
             };
             return {
                 paint: function () {
@@ -104,9 +107,12 @@ var LoadSections = function (container) {
             node.setAttribute('class', 'data-link');
             
             node.onclick = function () {
-                /*view.view.clear();
-                var loadChapters = new LoadChapters(document.getElementById('data-table'), item._id);
-                loadChapters.load();*/
+                view.view.clear();
+                var loadQuestions = new LoadQuestions(document.getElementById('data-table'), item._id);
+                loadQuestions.load();
+                
+                var historyOp = new HistoryOperations();
+                historyOp.add(loadQuestions.load);
             };
             return {
                 paint: function () {
@@ -128,8 +134,13 @@ var LoadSections = function (container) {
                 
                 section.title = document.getElementById('id_title').value;
                 section.description = CKEDITOR.instances.id_description.getData();
-                section.order = document.getElementById('id_order').value;
-                section.save();
+                section.roworder = document.getElementById('id_order').value;
+                
+                var loadPanel = new LoadPanel();
+                loadPanel.show();
+                section.save(
+                        function () { alert("Сохранение успешно!"); windowSave.close(); loadPanel.hide(); },
+                        function (response) {alert("В ходе сохранения раздела произошли ошибки: " + response);windowSave.close(); loadPanel.hide();});
             });
             
             var windowSave = new JLModalWindow("Создание раздела.", container);
@@ -153,8 +164,13 @@ var LoadSections = function (container) {
                     
                     current.title = document.getElementById('id_title').value;
                     current.description = CKEDITOR.instances.id_description.getData();
+                    current.roworder = document.getElementById('id_order').value;
                     
-                    current.save();
+                    var loadPanel = new LoadPanel();
+                    loadPanel.show();
+                    current.save(
+                            function () { alert("Сохранение успешно!"); windowSave.close(); loadPanel.hide(); },
+                            function (response) {alert("В ходе сохранения раздела произошли ошибки: " + response); windowSave.close(); loadPanel.hide();});
                 }, current);
                 var windowSave = new JLModalWindow("Редактирование раздела '" + item.title + "'", container);
                 windowSave.show();
@@ -217,25 +233,79 @@ var LoadSections = function (container) {
         return container;
     };
     
+    var rowOrderBehavior = function () {
+        var currentSortOrder = 0;
+        
+        var node = document.createElement('div');
+        node.setAttribute('class', 'sort-header');
+        
+        var textNode = document.createElement('span');
+        textNode.textContent = '№ раздела';
+        
+        var arrowImg = document.createElement('img');
+        arrowImg.width = '20';
+        arrowImg.height = '20';
+        arrowImg.src = 'images/no-sort.png';
+        
+        node.appendChild(textNode);
+        node.appendChild(arrowImg);
+        
+        var view = new GetView().view;
+        
+        node.onclick = function () {
+            if(currentSortOrder === 0) {
+                currentSortOrder = 1;
+                arrowImg.src = 'images/up.png';
+                view.sort('roworder', currentSortOrder);
+                return ;
+            } 
+            if(currentSortOrder === 1) {
+                arrowImg.src = 'images/down.png';
+                currentSortOrder = -1;
+            }
+            else {
+                arrowImg.src = 'images/up.png';
+                currentSortOrder = 1;
+            }
+            view.sort('roworder', currentSortOrder);
+        };
+        
+        return {
+            paint: function () {
+                return node;
+            }
+        };
+    };
+
     this.load = function () {
         if(!Sections.IsLoad) {
             Sections.remote = true;
-            Sections.attributes = [ 'title', 'description', 'order' ];
+            Sections.attributes = [ 'title', 'description', 'roworder' ];
             var rules = {
-                title: {title: 'Название раздела'},
+                roworder: {title: function () {return rowOrderBehavior();}, sort: true, style: {width: '110px', textAlign: 'center'}},
+                title: {title: "Название раздела"},
                 __description: {events: ['add'], title: 'Описание раздела', action: function (item) { return descriptionBehavior(item); }, style: {width: '150px', textAlign: 'center'}},
                 __chaptersLink: {events: ['add'], title: 'Главы', action: function (item) { return chaptersLink (item); }, style: {width: '150px', textAlign: 'center'} },
                 __questionsLink: {events: ['add'], title: 'Вопросы', action: function (item) { return questionsLink (item); }, style: {width: '150px', textAlign: 'center'} },
                 __remove: {events: ['add'], action: function (item) { return removeSection(item); }, style: {width: '22px'}},
-                __edit: {title: function () { return createSection(); }, events: ['add'], action: function (item) { return editSection(item); }, style: {width: '22px'}}
+                __edit: {
+                    title: function () { return createSection(); },
+                    events: ['add'],
+                    action: function (item) {
+                        return editSection(item);
+                    },
+                    style: {width: '22px'}
+                }
             };
             var viewModel = new BindingViewModel(view.view, rules);
 
             viewModel.listenerAdd(Sections.observer, 'add');
             viewModel.listenerChange(Sections.observer, 'change');
             viewModel.listenerRemove(Sections.observer, 'remove');
-
-            Sections.loadRemote();
+            
+            var loadPanel = new LoadPanel();
+            loadPanel.show();
+            Sections.loadRemote({}, function () {loadPanel.hide();});
         }
         else {
             view.view.repaint();

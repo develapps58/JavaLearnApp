@@ -163,14 +163,21 @@ var HTTPRequest = function ()
         }
         request.onreadystatechange = function () {
             if(request.readyState === 4) {
-                try {
-                    if(isFunction(success)) {
-                        success(request.responseText, request.status);
+                if(request.status === 200 || request.status === 201 || request.status === 204) {
+                    try {
+                        if(isFunction(success)) {
+                            success(request.responseText, request.status);
+                        }
+                    }
+                    catch (e) {
+                        if(isFunction(error)) {
+                            error(e);
+                        };
                     }
                 }
-                catch (e) {
+                else {
                     if(isFunction(error)) {
-                        error(e);
+                        error(request.responseText);
                     };
                 }
             }

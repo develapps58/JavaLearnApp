@@ -40,13 +40,8 @@ DOMAIN = {
                 'type': 'string',
                 'required': True
             },
-            'token': {
-                'type': 'string',
-                'unique': True
-            },
-            'roles': {
-                'type': 'list',
-                'allowed': ['admin', 'user', 'guest'],
+            'issystem': {
+                'type': 'boolean',
                 'required': True
             }
         }
@@ -58,9 +53,9 @@ DOMAIN = {
         'cache_expires': 0,
         
         'schema': {
-            'title': { 'type': 'string' },
+            'title': { 'type': 'string', 'required': True },
             'description': { 'type': 'string' },
-            'order': { 'type': 'int' }
+            'roworder': { 'type': 'integer', 'required': True, 'unique': True }
         }
     },
     'chapters': {
@@ -70,11 +65,12 @@ DOMAIN = {
         'cache_expires': 0,
         
         'schema': {
-            'title': { 'type': 'string' },
-            'content': { 'type': 'string' },
-            'order': { 'type': 'int' },
+            'title': { 'type': 'string', 'required': True },
+            'content': { 'type': 'string', 'required': True },
+            'roworder': { 'type': 'integer', 'required': True },
             'sectionid': {
                 'type': 'objectid',
+                'required': True,
                 'data_relation': {
                     'resource': 'sections',
                     'field': '_id',
@@ -82,6 +78,89 @@ DOMAIN = {
                 }
             }
         }
-    }
+    },
+    'questions': {
+    
+        #disable cache
+        'cache_control': '',
+        'cache_expires': 0,
+        
+        'schema': {
+            'title': {'type': 'string', 'required': True },
+            'roworder': { 'type': 'integer', 'required': True },
+            'sectionid': {
+                'type': 'objectid',
+                'required': True,
+                'data_relation': {
+                    'resource': 'sections',
+                    'field': '_id',
+                    'embeddable': True
+                }
+            }
+        }
+    },
+    'answers': {
+    
+        #disable cache
+        'cache_control': '',
+        'cache_expires': 0,
+        
+        'schema': {
+            'title': {'type': 'string', 'required': True},
+            'iscorrect': {'type': 'boolean', 'required': True},
+            'roworder': { 'type': 'integer', 'required': True },
+            'questionid': {
+                'type': 'objectid',
+                'required': True,
+                'data_relation': {
+                    'resource': 'questions',
+                    'field': '_id',
+                    'embeddable': True
+                }
+            }
+        }
+    },
+    'user_answers': {
+        
+        #disable cache
+        'cache_control': '',
+        'cache_expires': 0,
+        
+        'schema': {
+            'userid': {
+                'type': 'objectid',
+                'required': True,
+                'data_relation': {
+                    'resource': 'users',
+                    'field': '_id',
+                    'embeddable': True
+                }
+            },
+            'answerid': {
+                'type': 'objectid',
+                'required': True,
+                'data_relation': {
+                    'resource': 'answers',
+                    'field': '_id',
+                    'embeddable': True
+                }
+            },
+        }
+    },
+    
+    'changes': {
+    
+        #disable cache
+        'cache_control': '',
+        'cache_expires': 0,
+        
+        'schema': {
+            'guid': {
+                'type': 'string', 
+                'required': True,
+                'unique': True
+            }
+        }
+    },
 }
 
