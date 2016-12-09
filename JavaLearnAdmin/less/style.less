@@ -1,0 +1,217 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 12.10.2016, 15:23:59
+    Author     : Дмитрий
+*/
+
+html, body { 
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    background: url('../images/java_bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
+
+body {
+    padding: 5px;
+}
+
+
+#data-container {
+    margin: 0 auto;
+}
+
+
+#data-table {
+    margin: 0 auto;
+    width: 100%;
+    border-collapse: collapse;    
+    th {
+        background: rgba(63, 63, 63, 0.85);
+        text-align: center;
+        height: 35px;
+        color: white;
+    }
+    td {
+        border-bottom: 1px solid #999;
+        border-right: 1px solid #999;
+        padding: 1px;
+        height: 30px;
+    }
+    tr:nth-child(2n+1) {
+        background: white;
+    }
+    tr:nth-child(2n) {
+        background: rgba(255, 250, 205, 0.85);
+    }
+    tr:hover {
+        background: rgba(173, 216, 230, 0.85);
+    }
+}
+
+.link-element {
+    cursor: pointer;
+}
+
+.update-element {
+    color: goldenrod;
+}
+
+.delete-element {
+    color: red;
+}
+
+.operation_btn {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: relative;
+    margin: 0 auto;
+}
+
+.create_btn {
+    background: url('../images/create.png') no-repeat;
+    background-size: 18px 18px;
+    background-position: center center;
+}
+
+.create_btn:hover {
+    background-size: 20px 20px;
+}
+
+.edit_btn {
+    background: url('../images/edit.png') no-repeat;
+    background-size: 18px 18px;
+    background-position: center center;
+}
+
+.edit_btn:hover {
+    background-size: 20px 20px;
+}
+
+.remove_btn {
+    background: url('../images/remove.png') no-repeat;
+    background-size: 18px 18px;
+    background-position: center center;
+}
+
+.remove_btn:hover {
+    background-size: 20px 20px;
+}
+
+.back_btn {
+    background: url('../images/arrow-back.png') no-repeat;
+    background-size: 18px 18px;
+    background-position: center center;
+}
+
+.back_btn:hover {
+    background-size: 20px 20px;
+}
+
+
+
+.editable_text_field {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1px dashed black;
+    box-sizing: border-box;
+}
+
+.data-link {
+    cursor: pointer;
+}
+.data-link:hover {
+    color: red;
+}
+
+.dblclk-item {
+    cursor: url('../images/cursor-dblclk.png'), default;
+}
+
+.save-fields-container {
+    position: relative;
+    margin: 0 auto;
+    
+    width: 100%;
+    height: 100%;
+    
+    table {
+        tr {
+            td:first-child {
+                text-align: right;
+                vertical-align: top;
+                font-weight: bold;
+                width: 200px;
+                padding-right: 20px;
+            }
+        }
+    }
+    .text {
+        box-sizing: border-box;
+        height: 30px;
+        width: 100%;
+    }
+    .textedit {
+        box-sizing: border-box;
+    }
+    .save-button {
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        width: 150px;
+        height: 30px;
+        cursor: pointer;
+        border: 1px solid black;
+    }
+    .save-button:hover {
+        background: lightblue;
+    }
+}
+
+
+#auth-window {
+    position: absolute;
+    width: 400px;
+    height: 200px;
+    left: 50%;
+    top: 50%;
+    margin-left: -200px;
+    margin-top: -150px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    
+    
+    input {
+        display: block;
+        position: relative;
+        margin: 0 auto;
+        margin-top: 20px;
+        width: 360px;
+        padding: 6px 4px;
+        border-radius: 2px;
+        border: 2px solid lightgray;
+    }
+    button {
+        position: absolute;
+        right: 15px;
+        bottom: 15px;
+        
+        background: lightgray;
+        border: none;
+        cursor: pointer;
+        
+        width: 120px;
+        height: 30px;
+    }
+    button:hover {
+        background: silver;
+    }
+}

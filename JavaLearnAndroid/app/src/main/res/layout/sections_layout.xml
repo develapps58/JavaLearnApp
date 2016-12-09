@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/section_title"
+        android:paddingLeft="1pt"
+        android:paddingRight="1pt"
+        android:gravity="center"
+        android:background="#555"
+        android:textColor="#fcf57f"
+        android:layout_width="match_parent"
+        android:textAlignment="center"
+        android:layout_height="30pt" />
+    <TextView
+        android:id="@+id/section_description"
+        android:layout_width="match_parent"
+        android:background="#d6edff"
+        android:padding="3pt"
+        android:layout_height="50pt" />
+    <TextView
+        android:id="@+id/section_chapters_count"
+        android:layout_width="match_parent"
+        android:background="#d6edff"
+        android:gravity="right"
+        android:paddingRight="3pt"
+        android:textSize="10dp"
+        android:textColor="#aaa"
+        android:layout_height="7pt" />
+    <TextView
+        android:gravity="center"
+        android:id="@+id/section_questions"
+        android:background="#4a4aae"
+        android:textColor="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="20pt" />
+</LinearLayout>
